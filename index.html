@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruang Ekspor AI - Digital Co-Working Space</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        google: { blue: '#4285F4', purple: '#8A2BE2', gray: '#F8F9FA' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #F8F9FA; }
+        .gradient-text {
+            background: linear-gradient(90deg, #4285F4 0%, #8A2BE2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .gemini-border {
+            position: relative;
+        }
+        .gemini-border::before {
+            content: "";
+            position: absolute;
+            inset: -2px;
+            border-radius: 1rem;
+            background: linear-gradient(45deg, #4285F4, #8A2BE2);
+            z-index: -1;
+            opacity: 0.5;
+        }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen flex flex-col">
+
+    <header class="bg-white shadow-sm sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-white text-xl shadow-lg">
+                    <i class="fa-solid fa-sparkles"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold gradient-text">Ruang Ekspor AI</h1>
+                    <div class="flex items-center text-xs text-green-600 font-medium">
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse mr-1.5"></span> Live Workshop
+                    </div>
+                </div>
+            </div>
+            <button onclick="openModal()" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-2.5 px-6 rounded-full transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                <i class="fa-solid fa-plus mr-2"></i> Tambah Masalah Saya
+            </button>
+        </div>
+
+        <!-- Panduan Peserta (Onboarding Banner) -->
+        <div class="bg-gradient-to-r from-blue-50 to-purple-50 border-y border-blue-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <p class="text-sm font-semibold text-gray-700 mb-3"><i class="fa-solid fa-route text-blue-500 mr-2"></i> Panduan Workshop Hari Ini:</p>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="flex items-start space-x-3 bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                        <div class="bg-blue-100 text-blue-600 w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm shrink-0">1</div>
+                        <p class="text-xs text-gray-600">📝 <b>Buat Kartu</b><br>Tulis kendala & tujuanmu.</p>
+                    </div>
+                    <div class="flex items-start space-x-3 bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                        <div class="bg-blue-100 text-blue-600 w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm shrink-0">2</div>
+                        <p class="text-xs text-gray-600">🧪 <b>Eksperimen AI</b><br>Coba prompt di Gemini/NotebookLM.</p>
+                    </div>
+                    <div class="flex items-start space-x-3 bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                        <div class="bg-blue-100 text-blue-600 w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm shrink-0">3</div>
+                        <p class="text-xs text-gray-600">🤝 <b>Peer Review</b><br>Beri masukan di kartu teman.</p>
+                    </div>
+                    <div class="flex items-start space-x-3 bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                        <div class="bg-purple-100 text-purple-600 w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm shrink-0">4</div>
+                        <p class="text-xs text-gray-600">🚀 <b>Solved & Ekspor</b><br>Tandai selesai & unduh rekap.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        <div class="flex justify-between items-end mb-6">
+            <h2 class="text-xl font-bold text-gray-800">📋 Papan Masalah Live</h2>
+            <div class="text-sm text-gray-500">Menampilkan <span id="card-count" class="font-bold text-blue-600">0</span> kartu aktif</div>
+        </div>
+        
+        <!-- Grid Container -->
+        <div id="cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Kartu akan dirender di sini oleh JS -->
+        </div>
+    </main>
+
+    <div id="addModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden z-50 flex items-center justify-center opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden transform scale-95 transition-transform duration-300" id="modalContent">
+            <div class="px-6 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white flex justify-between items-center">
+                <h3 class="font-bold text-lg"><i class="fa-solid fa-lightbulb mr-2"></i>Tambah Masalah Baru</h3>
+                <button onclick="closeModal()" class="text-white hover:text-gray-200 focus:outline-none"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="problemForm" onsubmit="submitProblem(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Peserta</label>
+                    <input type="text" id="inputName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="Misal: Andi">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tag Topik</label>
+                    <select id="inputTopic" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white">
+                        <option value="Analisis Data">📊 Analisis Data</option>
+                        <option value="Coding">💻 Coding / Debugging</option>
+                        <option value="Brainstorming">💡 Brainstorming Ide</option>
+                        <option value="Penulisan">📝 Penulisan / Riset</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tools AI yang Dicoba</label>
+                    <div class="flex space-x-4">
+                        <label class="flex items-center space-x-2 text-sm"><input type="checkbox" name="tools" value="Gemini" checked class="rounded text-blue-500 focus:ring-blue-500"> <span>Gemini</span></label>
+                        <label class="flex items-center space-x-2 text-sm"><input type="checkbox" name="tools" value="NotebookLM" class="rounded text-blue-500 focus:ring-blue-500"> <span>NotebookLM</span></label>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Kendala / Tujuan</label>
+                    <textarea id="inputProblem" required rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none" placeholder="Ceritakan apa yang ingin kamu capai..."></textarea>
+                </div>
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-sm font-medium text-gray-700">Prompt Awal (Opsional)</label>
+                        <button type="button" onclick="improvePromptWithAI()" id="btnImprove" class="text-xs text-purple-600 hover:text-purple-800 font-bold flex items-center transition-colors bg-purple-50 px-2 py-1 rounded border border-purple-100">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Perbaiki dengan AI
+                        </button>
+                    </div>
+                    <textarea id="inputPrompt" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all font-mono text-sm" placeholder="Tulis ide prompt-mu secara kasar di sini... AI akan membantu merapikannya."></textarea>
+                </div>
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal()" class="px-5 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-medium shadow-md transition-colors">Posting Masalah</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 transform translate-y-20 opacity-0 transition-all duration-300 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-xl z-50 flex items-center">
+        <i class="fa-solid fa-check-circle text-green-400 mr-3"></i>
+        <span id="toastMsg">Notifikasi</span>
+    </div>
+
+    <script>
+        // Data Dummy
+        let cards = [
+            {
+                id: 1,
+                name: "Rina S.",
+                topic: "Analisis Data",
+                tools: ["NotebookLM"],
+                problem: "Susah merangkum poin penting dari 10 paper jurnal ke format tabel perbandingan.",
+                prompt: "Tolong baca seluruh dokumen ini. Buatkan matriks perbandingan literatur dalam bentuk tabel Markdown dengan kolom: Judul, Metode, dan Hasil Utama. Abaikan bagian pendahuluan.",
+                status: "in_progress", // in_progress, solved
+                comments: [
+                    { user: "Budi", text: "Coba batasi hanya untuk paper di atas tahun 2022 di promptnya Rin!" }
+                ]
+            },
+            {
+                id: 2,
+                name: "Alex Dev",
+                topic: "Coding",
+                tools: ["Gemini"],
+                problem: "Mencoba membuat komponen React untuk carousel tapi selalu error saat auto-play.",
+                prompt: "Tuliskan kode React fungsional (Tailwind CSS) untuk infinite carousel image. Pastikan useEffect untuk autoplay dibersihkan (cleanup) agar tidak memory leak.",
+                status: "solved",
+                comments: [
+                    { user: "Sarah", text: "Wah promptnya rapi! Pantes langsung solved." },
+                    { user: "Alex Dev", text: "Iya, kunci di kalimat 'dibersihkan (cleanup)'. Gemini langsung kasih clearInterval." }
+                ]
+            }
+        ];
+
+        const container = document.getElementById('cards-container');
+        const countEl = document.getElementById('card-count');
+
+        function renderCards() {
+            container.innerHTML = '';
+            countEl.innerText = cards.length;
+
+            cards.forEach(card => {
+                const isSolved = card.status === 'solved';
+                const statusBadge = isSolved 
+                    ? `<span class="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full border border-green-200"><i class="fa-solid fa-check mr-1"></i> SOLVED</span>`
+                    : `<span class="px-2.5 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-full border border-yellow-200"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Coba Prompt</span>`;
+                
+                const toolsHtml = card.tools.map(t => `<span class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded mr-1"><i class="fa-solid fa-robot mr-1"></i>${t}</span>`).join('');
+                
+                const commentsHtml = card.comments.map(c => `
+                    <div class="text-sm bg-gray-50 p-2 rounded mb-1.5 border border-gray-100">
+                        <span class="font-bold text-gray-700 text-xs">${c.user}:</span> <span class="text-gray-600">${c.text}</span>
+                    </div>
+                `).join('');
+
+                const cardHTML = `
+                    <div class="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-gray-200 flex flex-col h-full ${isSolved ? 'border-t-4 border-t-green-500' : 'gemini-border'}">
+                        <!-- Card Header -->
+                        <div class="p-5 border-b border-gray-100 flex-grow">
+                            <div class="flex justify-between items-start mb-3">
+                                <div>
+                                    <h3 class="font-bold text-gray-800 text-lg">${card.name}</h3>
+                                    <p class="text-xs font-medium text-blue-600 uppercase tracking-wider">${card.topic}</p>
+                                </div>
+                                ${statusBadge}
+                            </div>
+                            <p class="text-gray-700 text-sm mb-3">${card.problem}</p>
+                            <div class="flex flex-wrap">${toolsHtml}</div>
+                        </div>
+
+                        <!-- Prompt Section -->
+                        <div class="p-5 bg-blue-50/50">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-bold text-gray-600 uppercase">Resep Prompt</span>
+                                <button onclick="copyPrompt(${card.id})" class="text-blue-600 hover:text-blue-800 text-xs font-semibold flex items-center transition-colors">
+                                    <i class="fa-regular fa-copy mr-1"></i> Copy
+                                </button>
+                            </div>
+                            <div class="bg-gray-800 text-green-400 font-mono text-sm p-3 rounded-lg max-h-32 overflow-y-auto hide-scroll" id="prompt-${card.id}">
+                                ${card.prompt || 'Belum ada prompt yang diinputkan.'}
+                            </div>
+                        </div>
+
+                        <!-- Interaction & Comments -->
+                        <div class="p-5 border-t border-gray-100 bg-white rounded-b-2xl">
+                            <div class="max-h-32 overflow-y-auto hide-scroll mb-3">
+                                ${commentsHtml || '<p class="text-xs text-gray-400 italic">Belum ada masukan. Jadilah yang pertama!</p>'}
+                            </div>
+                            
+                            <form onsubmit="addComment(event, ${card.id})" class="flex gap-2 mt-auto">
+                                <input type="text" placeholder="Beri masukan prompt..." class="flex-grow bg-gray-50 border border-gray-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500" required>
+                                <button type="submit" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg transition-colors" title="Kirim Masukan"><i class="fa-solid fa-paper-plane text-sm"></i></button>
+                                <button type="button" onclick="askAIMentor(${card.id})" id="btn-ai-mentor-${card.id}" class="bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 border border-purple-200 text-purple-600 px-3 py-2 rounded-lg transition-colors shadow-sm" title="Minta Saran AI Mentor">
+                                    <i class="fa-solid fa-robot text-sm"></i>
+                                </button>
+                            </form>
+
+                            ${!isSolved ? `
+                            <button onclick="markSolved(${card.id})" class="w-full mt-3 border-2 border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700 font-bold py-2 rounded-lg transition-colors text-sm flex items-center justify-center">
+                                <i class="fa-solid fa-check-double mr-2"></i> Tandai Masalah Selesai
+                            </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', cardHTML);
+            });
+        }
+
+        const modal = document.getElementById('addModal');
+        const modalContent = document.getElementById('modalContent');
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toastMsg');
+
+        function openModal() {
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalContent.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeModal() {
+            modal.classList.add('opacity-0');
+            modalContent.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.getElementById('problemForm').reset();
+            }, 300);
+        }
+
+        function showToast(message) {
+            toastMsg.innerText = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function submitProblem(e) {
+            e.preventDefault();
+            
+            // Get selected tools
+            const checkboxes = document.querySelectorAll('input[name="tools"]:checked');
+            let selectedTools = [];
+            checkboxes.forEach((cb) => selectedTools.push(cb.value));
+            if(selectedTools.length === 0) selectedTools = ["Google AI"];
+
+            const newCard = {
+                id: Date.now(),
+                name: document.getElementById('inputName').value,
+                topic: document.getElementById('inputTopic').value,
+                tools: selectedTools,
+                problem: document.getElementById('inputProblem').value,
+                prompt: document.getElementById('inputPrompt').value,
+                status: "in_progress",
+                comments: []
+            };
+
+            // Tambahkan di awal array agar muncul paling atas
+            cards.unshift(newCard);
+            renderCards();
+            closeModal();
+            showToast("Kartu masalah berhasil ditambahkan!");
+        }
+
+        function copyPrompt(id) {
+            const textToCopy = document.getElementById(`prompt-${id}`).innerText;
+            
+            // Menggunakan textarea sementara untuk copy text (Kompatibilitas iframe)
+            const tempTextArea = document.createElement("textarea");
+            tempTextArea.value = textToCopy;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showToast("Prompt disalin ke clipboard!");
+            } catch (err) {
+                console.error('Gagal menyalin text', err);
+            }
+            
+            document.body.removeChild(tempTextArea);
+        }
+
+        function addComment(e, cardId) {
+            e.preventDefault();
+            const input = e.target.querySelector('input');
+            const commentText = input.value.trim();
+            
+            if(commentText) {
+                const cardIndex = cards.findIndex(c => c.id === cardId);
+                if(cardIndex > -1) {
+                    cards[cardIndex].comments.push({ user: "Guest", text: commentText });
+                    renderCards();
+                    showToast("Masukan terkirim!");
+                }
+            }
+        }
+
+        function markSolved(cardId) {
+            const cardIndex = cards.findIndex(c => c.id === cardId);
+            if(cardIndex > -1) {
+                cards[cardIndex].status = "solved";
+                renderCards();
+                showToast("Selamat! Masalah berhasil dipecahkan.");
+            }
+        }
+
+        async function callGeminiAPI(prompt, systemInstruction = "") {
+            const apiKey = ""; // API Key dikelola otomatis oleh environment Canvas
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+            
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }]
+            };
+
+            if (systemInstruction) {
+                payload.systemInstruction = { parts: [{ text: systemInstruction }] };
+            }
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (result.candidates && result.candidates.length > 0) {
+                    return result.candidates[0].content.parts[0].text;
+                }
+                throw new Error("Format respons tidak valid");
+            } catch (error) {
+                console.error("Gagal memanggil Gemini API:", error);
+                showToast("Terjadi kesalahan saat memanggil AI.");
+                return null;
+            }
+        }
+
+        async function improvePromptWithAI() {
+            const problemEl = document.getElementById('inputProblem');
+            const promptEl = document.getElementById('inputPrompt');
+            const btnImprove = document.getElementById('btnImprove');
+            
+            const problemText = problemEl.value.trim();
+            const promptText = promptEl.value.trim();
+
+            if (!problemText) {
+                showToast("Isi bagian 'Kendala / Tujuan' terlebih dahulu!");
+                problemEl.focus();
+                return;
+            }
+
+            // Ubah state tombol menjadi loading
+            const originalBtnHTML = btnImprove.innerHTML;
+            btnImprove.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Meracik...';
+            btnImprove.disabled = true;
+            btnImprove.classList.add('opacity-70', 'cursor-not-allowed');
+
+            const systemPrompt = "Anda adalah seorang ahli 'Prompt Engineer' tingkat dunia. Tugas Anda adalah membantu peserta workshop merumuskan prompt yang sangat efektif untuk Google Gemini atau NotebookLM. Anda akan diberikan 'Tujuan/Masalah' pengguna, dan (opsional) draf prompt awal mereka. Hasilkan SATU prompt yang jauh lebih baik, terstruktur, jelas, dan siap pakai (tanpa tanda kutip ganda pembungkus atau penjelasan tambahan di luar prompt itu sendiri).";
+            
+            const userPrompt = `Tujuan/Masalah: ${problemText}\nDraf Prompt Awal (bisa kosong): ${promptText || "Belum ada."}\n\nTolong perbaiki/buatkan prompt terbaik untuk kasus ini.`;
+
+            const improvedPrompt = await callGeminiAPI(userPrompt, systemPrompt);
+
+            if (improvedPrompt) {
+                promptEl.value = improvedPrompt;
+                showToast("Prompt berhasil diperbaiki oleh AI!");
+                // Highlight textarea to show it changed
+                promptEl.classList.add('ring-2', 'ring-purple-500');
+                setTimeout(() => promptEl.classList.remove('ring-2', 'ring-purple-500'), 1500);
+            }
+
+            // Kembalikan state tombol
+            btnImprove.innerHTML = originalBtnHTML;
+            btnImprove.disabled = false;
+            btnImprove.classList.remove('opacity-70', 'cursor-not-allowed');
+        }
+
+        async function askAIMentor(cardId) {
+            const cardIndex = cards.findIndex(c => c.id === cardId);
+            if(cardIndex === -1) return;
+
+            const card = cards[cardIndex];
+            const btnMentor = document.getElementById(`btn-ai-mentor-${cardId}`);
+            
+            // Ubah tombol jadi loading
+            const originalIcon = btnMentor.innerHTML;
+            btnMentor.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-sm"></i>';
+            btnMentor.disabled = true;
+
+            const systemPrompt = "Anda adalah 'AI Mentor', asisten cerdas yang ramah di sebuah acara Digital Co-Working Space. Seseorang sedang mengalami kendala. Baca masalahnya, dan berikan satu masukan/komentar singkat (maksimal 2 kalimat) berupa ide, sudut pandang baru, atau cara menggunakan AI untuk menyelesaikannya. Gunakan bahasa gaul/santai yang profesional. Jangan gunakan formatting markdown tebal/miring berlebihan.";
+            
+            const userPrompt = `Nama Peserta: ${card.name}\nTopik: ${card.topic}\nKendala: ${card.problem}\n\nBerikan komentar motivasi dan saran solutif singkat untuknya.`;
+
+            const aiResponse = await callGeminiAPI(userPrompt, systemPrompt);
+
+            if (aiResponse) {
+                // Tambahkan komentar ke kartu
+                card.comments.push({ 
+                    user: "✨ AI Mentor", 
+                    text: aiResponse 
+                });
+                renderCards();
+                showToast(`AI Mentor memberikan masukan untuk ${card.name}!`);
+            } else {
+                // Restore button jika gagal
+                btnMentor.innerHTML = originalIcon;
+                btnMentor.disabled = false;
+            }
+        }
+
+        // Inisialisasi awal
+        window.onload = renderCards;
+    </script>
+</body>
+</html>
